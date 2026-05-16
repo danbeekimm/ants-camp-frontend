@@ -14,8 +14,11 @@ export async function searchStocks(
   query: string,
   limit = 20,
 ): Promise<StockSearchResult[]> {
+  const token = localStorage.getItem('accessToken')
   const params = new URLSearchParams({ q: query, limit: String(limit) })
-  const res = await fetch(`${BASE_URL}/stocks/search?${params}`)
+  const res = await fetch(`${BASE_URL}/stocks/search?${params}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
   if (!res.ok) throw new Error('종목 검색 실패')
   return res.json()
 }
@@ -24,8 +27,10 @@ export async function searchStocks(
  * 종목 실시간 구독 등록 (체결가 + 호가 동시)
  */
 export async function subscribeStock(stockCode: string): Promise<void> {
+  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/stocks/realtime/${stockCode}`, {
     method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!res.ok) throw new Error(`${stockCode} 구독 등록 실패`)
 }
@@ -34,8 +39,10 @@ export async function subscribeStock(stockCode: string): Promise<void> {
  * 종목 실시간 구독 해제
  */
 export async function unsubscribeStock(stockCode: string): Promise<void> {
+  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/stocks/realtime/${stockCode}`, {
     method: 'DELETE',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!res.ok) throw new Error(`${stockCode} 구독 해제 실패`)
 }
@@ -82,13 +89,15 @@ async function placeOrder(
   req: TradeOrderRequest,
   accountId: string,
 ): Promise<TradeOrderResponse> {
+  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/trades/order`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-ACCOUNT-ID': accountId,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(req),
+    body: JSON.stringify({ ...req, accountId }),  // accountId를 body에도 포함
   })
   const json: ApiResponse<TradeOrderResponse> = await res.json()
   if (!res.ok) throw new Error(json.message ?? '주문 실패')
@@ -101,8 +110,12 @@ async function placeOrder(
 export async function getPendingOrders(
   accountId: string,
 ): Promise<PendingOrderResponse[]> {
+  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/trades/pending`, {
-    headers: { 'X-ACCOUNT-ID': accountId },
+    headers: {
+      'X-ACCOUNT-ID': accountId,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   })
   const json: ApiResponse<PendingOrderResponse[]> = await res.json()
   if (!res.ok) throw new Error(json.message ?? '미체결 조회 실패')
@@ -116,9 +129,13 @@ export async function cancelPendingOrder(
   tradeId: string,
   accountId: string,
 ): Promise<TradeOrderResponse> {
+  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/trades/order/${tradeId}`, {
     method: 'DELETE',
-    headers: { 'X-ACCOUNT-ID': accountId },
+    headers: {
+      'X-ACCOUNT-ID': accountId,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   })
   const json: ApiResponse<TradeOrderResponse> = await res.json()
   if (!res.ok) throw new Error(json.message ?? '주문 취소 실패')
@@ -137,11 +154,13 @@ export async function buyStock(
   req: TradeRequest,
   accountId: string,
 ): Promise<TradeResponse> {
+  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/trades/buy`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-ACCOUNT-ID': accountId,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(req),
   })
@@ -160,11 +179,13 @@ export async function sellStock(
   req: TradeRequest,
   accountId: string,
 ): Promise<TradeResponse> {
+  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/trades/sell`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-ACCOUNT-ID': accountId,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(req),
   })
@@ -203,8 +224,11 @@ async function fetchMinuteCandles(stockCode: string, dateTime?: Date): Promise<C
   )
   const isoLocal = local.toISOString().slice(0, 19)
 
+  const token = localStorage.getItem('accessToken')
   const params = new URLSearchParams({ stock_code: stockCode, date_time: isoLocal })
-  const res = await fetch(`${BASE_URL}/trades/price?${params}`)
+  const res = await fetch(`${BASE_URL}/trades/price?${params}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
   if (!res.ok) throw new Error(`분봉 조회 실패: ${res.status}`)
 
   const json: ApiResponse<MinutePriceResponse> = await res.json()
@@ -254,7 +278,10 @@ async function fetchDailyCandles(stockCode: string, timeframe: '1d' | '1w' | '1M
     end_date:   toDate,
     period,
   })
-  const res = await fetch(`${BASE_URL}/trades/chart?${params}`)
+  const token = localStorage.getItem('accessToken')
+  const res = await fetch(`${BASE_URL}/trades/chart?${params}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
   if (!res.ok) throw new Error(`기간별 차트 조회 실패: ${res.status}`)
 
   const json: ApiResponse<DailyChartApiResponse> = await res.json()

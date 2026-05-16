@@ -236,8 +236,7 @@ export async function getParticipants(
 
 /**
  * POST /api/competitions/{competitionId}/participants
- * Body: { userId, nickname }
- * 기존 joinCompetition(id, token) 에서 userId, nickname 필요하도록 변경
+ * Header: X-User-Id, X-User-Name (URL encoded)
  */
 export async function joinCompetition(
   competitionId: string,
@@ -247,8 +246,11 @@ export async function joinCompetition(
 ): Promise<CompetitionParticipant> {
   const res = await fetch(`/api/competitions/${competitionId}/participants`, {
     method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify({ userId, nickname }),
+    headers: {
+      ...authHeaders(accessToken),
+      'X-User-Id': userId,
+      'X-User-Name': encodeURIComponent(nickname),
+    },
   })
   return unwrap<CompetitionParticipant>(res)
 }
