@@ -9,14 +9,33 @@ import { LoginPage }              from '@/pages/LoginPage'
 import { AdminLoginPage }         from '@/pages/AdminLoginPage'
 import { RegisterPage }           from '@/pages/RegisterPage'
 import { MainPage }               from '@/pages/MainPage'
+import { CompetitionsPage }       from '@/pages/CompetitionsPage'
 import { CompetitionDetailPage }  from '@/pages/CompetitionDetailPage'
 import { CompetitionDashboardPage } from '@/pages/CompetitionDashboardPage'
 import { StockChartPage }         from '@/pages/StockChartPage'
 import { MyPage }                 from '@/pages/MyPage'
 import { ProfileEditPage }        from '@/pages/ProfileEditPage'
 import { PortfolioPage }          from '@/pages/PortfolioPage'
-import { AccountDetailPage }      from '@/pages/AccountDetailPage'
-import { AdminPage }              from '@/pages/AdminPage'
+import { GuidesPage }             from '@/pages/GuidesPage'
+import { GuideDetailPage }        from '@/pages/GuideDetailPage'
+import { ChatBot }                from '@/components/ChatBot'
+import { Footer }                from '@/components/Footer'
+
+// 어드민
+import { AdminLayout }            from '@/pages/admin/AdminLayout'
+import { AdminCompetitionPage }   from '@/pages/admin/AdminCompetitionPage'
+import { DocumentListPage }       from '@/pages/admin/assistant/DocumentListPage'
+import { DocumentNewPage }        from '@/pages/admin/assistant/DocumentNewPage'
+import { DocumentDetailPage }     from '@/pages/admin/assistant/DocumentDetailPage'
+import { PromptVersionPage }      from '@/pages/admin/assistant/PromptVersionPage'
+import { EvalListPage }           from '@/pages/admin/assistant/EvalListPage'
+import { EvalRunPage }            from '@/pages/admin/assistant/EvalRunPage'
+import { EvalDetailPage }         from '@/pages/admin/assistant/EvalDetailPage'
+import { PairwiseResultPage }     from '@/pages/admin/assistant/PairwiseResultPage'
+import { PairwiseNewPage }        from '@/pages/admin/assistant/PairwiseNewPage'
+import { NotificationListPage }   from '@/pages/admin/notification/NotificationListPage'
+import { NotificationDetailPage } from '@/pages/admin/notification/NotificationDetailPage'
+import { AdminUsersPage }         from '@/pages/admin/AdminUsersPage'
 
 /** 로그인 필요 라우트 */
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -35,7 +54,6 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   const isDark = useThemeStore((s) => s.isDark)
 
-  // html 요소에 dark 클래스 동기화
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark)
   }, [isDark])
@@ -53,7 +71,8 @@ export default function App() {
             <Route path="/register"     element={<RegisterPage />} />
 
             {/* 로그인 필요 */}
-            <Route path="/"   element={<PrivateRoute><MainPage /></PrivateRoute>} />
+            <Route path="/" element={<PrivateRoute><MainPage /></PrivateRoute>} />
+            <Route path="/competitions" element={<PrivateRoute><CompetitionsPage /></PrivateRoute>} />
 
             <Route path="/competitions/:id"
               element={<PrivateRoute><CompetitionDetailPage /></PrivateRoute>} />
@@ -70,18 +89,46 @@ export default function App() {
 
             <Route path="/portfolio"
               element={<PrivateRoute><PortfolioPage /></PrivateRoute>} />
-            <Route path="/account/:accountId"
-              element={<PrivateRoute><AccountDetailPage /></PrivateRoute>} />
 
-            {/* 어드민 전용 */}
-            <Route path="/admin"
-              element={<AdminRoute><AdminPage /></AdminRoute>} />
+            <Route path="/guides"
+              element={<PrivateRoute><GuidesPage /></PrivateRoute>} />
+            <Route path="/guides/:documentId"
+              element={<PrivateRoute><GuideDetailPage /></PrivateRoute>} />
+
+            {/* 어드민 — 공통 레이아웃 + 중첩 라우트 */}
+            <Route
+              path="/admin"
+              element={<AdminRoute><AdminLayout /></AdminRoute>}
+            >
+              <Route index element={<Navigate to="competitions" replace />} />
+              <Route path="competitions" element={<AdminCompetitionPage />} />
+
+              <Route path="assistant" element={<Navigate to="documents" replace />} />
+              <Route path="assistant/documents"             element={<DocumentListPage />} />
+              <Route path="assistant/documents/new"         element={<DocumentNewPage />} />
+              <Route path="assistant/documents/:documentId" element={<DocumentDetailPage />} />
+
+              <Route path="assistant/prompts" element={<PromptVersionPage />} />
+
+              <Route path="assistant/evaluations"                   element={<EvalListPage />} />
+              <Route path="assistant/evaluations/new"               element={<EvalRunPage />} />
+              <Route path="assistant/evaluations/pairwise"          element={<PairwiseResultPage />} />
+              <Route path="assistant/evaluations/pairwise/new"      element={<PairwiseNewPage />} />
+              <Route path="assistant/evaluations/:evalRunId"        element={<EvalDetailPage />} />
+
+              <Route path="notifications"                element={<NotificationListPage />} />
+              <Route path="notifications/:notificationId" element={<NotificationDetailPage />} />
+              <Route path="users"                        element={<AdminUsersPage />} />
+            </Route>
 
             {/* fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       </div>
+
+      <Footer />
+      <ChatBot />
     </BrowserRouter>
   )
 }

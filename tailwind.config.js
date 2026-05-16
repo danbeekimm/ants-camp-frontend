@@ -27,6 +27,8 @@ export default {
           600: '#4f46e5',
           700: '#4338ca',
         },
+        // 상태 시맨틱 컬러 — Alert 컴포넌트에서 사용
+        // 라이트/다크 구분은 dark: prefix로 처리 (CSS var 아님)
         up:   '#ef4444',
         down: '#3b82f6',
       },

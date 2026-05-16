@@ -2,18 +2,254 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── 라이트 모드 (기본) ─────────────────────────────────────────── */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes slideUp {
+  from { max-height: 0; opacity: 0; }
+  to   { max-height: 210px; opacity: 1; }
+}
+
+@keyframes pickerPop {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* emoji-mart 래퍼·컴포넌트 크기 + 색상 매칭
+   ▶ picker 는 emoji-mart 의 :host { height: 435px } 자연 높이를 그대로 사용한다.
+     (height 강제 오버라이드 시 내부 ResizeObserver / scroll 좌표 계산이 깨져
+      카테고리 탭 클릭 / 그리드 스크롤이 동작하지 않는 부작용이 있음)
+   ▶ wrapper 는 picker 보다 크게 잡고 같은 배경색으로 채워 시각적 어색함 제거.
+   ▶ 위치(top/bottom/left/right) · 배경 · 그림자는 ChatBot inline style 에서 지정. */
+.emoji-picker-wrap {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;   /* picker 자연 높이 → 위쪽 정렬 */
+  overflow: hidden;                     /* 둥근 모서리 clip */
+  pointer-events: auto;
+  border-radius: 12px;
+}
+.emoji-picker-wrap > div { display: block; }
+.emoji-picker-wrap em-emoji-picker {
+  --shadow: none;                       /* picker 자체 그림자 끔 — wrapper 에 적용 */
+  --border-radius: 12px;
+  box-shadow: none;
+}
+
+/* emoji-mart 컴팩트 레이아웃 — 색상은 컴포넌트 style prop으로 제어 */
+em-emoji-picker { --font-size: 12px !important; }
+em-emoji-picker input[type="search"]       { height: 28px !important; font-size: 12px !important; padding: 0 10px !important; }
+em-emoji-picker [class*="nav"]             { height: 30px !important; min-height: 0 !important; padding: 0 4px !important; }
+em-emoji-picker [class*="nav"] button      { width: 26px !important; height: 26px !important; padding: 0 !important; }
+em-emoji-picker [class*="nav"] svg         { width: 14px !important; height: 14px !important; }
+em-emoji-picker [class*="category-label"] { font-size: 11px !important; padding: 2px 6px !important; }
+
+@keyframes hero-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes chart-draw {
+  from { stroke-dashoffset: 900; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes price-flash-up {
+  0%   { background: rgba(239,68,68,0.15); }
+  100% { background: transparent; }
+}
+
+@keyframes price-flash-down {
+  0%   { background: rgba(59,130,246,0.15); }
+  100% { background: transparent; }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── 1위 카드 호화 효과 — 펄스 글로우 + 사선 샤인 스윕 (카드 전체 적용) ── */
+@keyframes lux-pulse {
+  0%, 100% { box-shadow: 0  2px 18px rgba(217,119,6,0.10), 0 0 0 1px rgba(217,119,6,0.0)  inset; }
+  50%      { box-shadow: 0 18px 56px rgba(251,191,36,0.55), 0 0 0 1px rgba(251,191,36,0.38) inset; }
+}
+@keyframes lux-shine {
+  0%        { background-position: -150% 0; }
+  55%, 100% { background-position:  250% 0; }
+}
+.lux-card {
+  animation: lux-pulse 5.2s ease-in-out infinite;
+}
+.lux-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.22) 50%, transparent 62%);
+  background-size: 220% 100%;
+  background-position: -150% 0;
+  animation: lux-shine 5.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+/* 다크모드: 샤인 강도 낮춤 — 어두운 베이스 위에서 흰 띠가 덜 튀게 */
+.dark .lux-card::after {
+  background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.09) 50%, transparent 62%);
+}
+
+/* ── 라이트 모드 — Option A: Linear / Crisp ─────────────────────── */
+/* Tailwind gray 팔레트 기반 (slate 대신 순수 중립 회색)             */
 :root {
-  --gray-100: #1e293b;
-  --gray-200: #334155;
-  --gray-300: #475569;
-  --gray-400: #64748b;
-  --gray-500: #94a3b8;
-  --gray-600: #cbd5e1;
-  --gray-700: #e2e8f0;
-  --gray-800: #f1f5f9;
-  --gray-900: #f8fafc;
-  --gray-950: #ffffff;
+  --gray-100: #111827;  /* 본문 — Tailwind gray-900 */
+  --gray-200: #1f2937;  /* Tailwind gray-800 */
+  --gray-300: #374151;  /* Tailwind gray-700 */
+  --gray-400: #4b5563;  /* Tailwind gray-600 */
+  --gray-500: #6b7280;  /* 보조 텍스트 — 대비 7:1, Tailwind gray-500 */
+  --gray-600: #9ca3af;  /* 비활성/메타 — 대비 3:1, Tailwind gray-400 */
+  --gray-700: #d1d5db;  /* 보더 — Tailwind gray-300 */
+  --gray-800: #e5e7eb;  /* 카드 보더/구분선 — Tailwind gray-200 */
+  --gray-900: #ffffff;  /* 카드 배경 — 순백 (페이지 배경과 구분) */
+  --gray-950: #fafafa;  /* 페이지 배경 — 차가운 중립색 */
+}
+
+/* ── 시맨틱 컴포넌트 변수 ─────────────────────────────────────────── */
+/* 라이트 모드 (Option A · Linear / Crisp) — admin 리디자인 샘플과 매칭 */
+:root {
+  --bubble-bot:   #f3f4f6;
+
+  --bg-hover:     #f4f4f5;
+  --border:       #e5e7eb;
+  --border-soft:  #f1f5f9;   /* 내부 row 구분선 */
+
+  --accent:       #6366f1;
+  --accent-soft:  #eef2ff;
+  --accent-text:  #4338ca;
+
+  --emerald:      #059669;
+  --emerald-soft: #ecfdf5;
+  --emerald-text: #047857;
+  --emerald-bd:   #a7f3d0;
+
+  --amber:        #d97706;
+  --amber-soft:   #fffbeb;
+  --amber-text:   #b45309;
+  --amber-bd:     #fcd34d;
+
+  --rose:         #e11d48;
+  --rose-soft:    #fff1f2;
+  --rose-text:    #be123c;
+  --rose-bd:      #fecdd3;
+
+  --violet:       #7c3aed;
+  --violet-soft: #f5f3ff;
+  --violet-text:  #6d28d9;
+  --violet-bd:    #ddd6fe;
+
+  --sky:          #0284c7;
+  --sky-soft:     #f0f9ff;
+  --sky-text:     #0369a1;
+  --sky-bd:       #bae6fd;
+}
+
+.dark {
+  --bubble-bot:   #1f2937;
+
+  --bg-hover:     rgba(255,255,255,0.04);
+  --border:       #1f2937;
+  --border-soft:  rgba(255,255,255,0.06);
+
+  --accent:       #6366f1;
+  --accent-soft:  rgba(99,102,241,0.12);
+  --accent-text:  #a5b4fc;
+
+  --emerald:      #10b981;
+  --emerald-soft: rgba(16,185,129,0.12);
+  --emerald-text: #6ee7b7;
+  --emerald-bd:   rgba(16,185,129,0.35);
+
+  --amber:        #f59e0b;
+  --amber-soft:   rgba(245,158,11,0.12);
+  --amber-text:   #fcd34d;
+  --amber-bd:     rgba(245,158,11,0.35);
+
+  --rose:         #f43f5e;
+  --rose-soft:    rgba(244,63,94,0.12);
+  --rose-text:    #fda4af;
+  --rose-bd:      rgba(244,63,94,0.35);
+
+  --violet:       #8b5cf6;
+  --violet-soft:  rgba(139,92,246,0.12);
+  --violet-text:  #c4b5fd;
+  --violet-bd:    rgba(139,92,246,0.35);
+
+  --sky:          #0ea5e9;
+  --sky-soft:     rgba(14,165,233,0.14);
+  --sky-text:     #7dd3fc;
+  --sky-bd:       rgba(14,165,233,0.38);
+}
+
+/* ── 칩 · 배지 시스템 ─ admin 리디자인 샘플과 통일 ───────────────── */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 9999px;
+  border: 1px solid transparent; line-height: 18px;
+  white-space: nowrap;
+}
+.chip-indigo  { background: var(--accent-soft);  color: var(--accent-text);  border-color: color-mix(in srgb, var(--accent) 28%, transparent); }
+.chip-emerald { background: var(--emerald-soft); color: var(--emerald-text); border-color: var(--emerald-bd); }
+.chip-amber   { background: var(--amber-soft);   color: var(--amber-text);   border-color: var(--amber-bd); }
+.chip-rose    { background: var(--rose-soft);    color: var(--rose-text);    border-color: var(--rose-bd); }
+.chip-violet  { background: var(--violet-soft);  color: var(--violet-text);  border-color: var(--violet-bd); }
+.chip-sky     { background: var(--sky-soft);     color: var(--sky-text);     border-color: var(--sky-bd); }
+.chip-gray    { background: var(--gray-950);     color: var(--gray-400);     border-color: var(--border); }
+.chip-slate   { background: var(--gray-950);     color: var(--gray-500);     border-color: var(--border-soft); }
+
+/* 다크 모드 — chip-slate 가독성 보강 (TERMS · 일반 라벨용) */
+.dark .chip-slate {
+  background: rgba(148,163,184,0.14);
+  color: #cbd5e1;
+  border-color: rgba(148,163,184,0.32);
+}
+
+/* 점 표시(상태표시등) */
+.chip-dot::before {
+  content: ''; width: 6px; height: 6px;
+  border-radius: 9999px; background: currentColor;
+  display: inline-block;
+}
+
+/* ── 키커 라벨 (UPPERCASE 메타) ───────────────────────────────────── */
+.kicker {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+/* ── 내부 row 구분선 — 카드 안쪽 list 사이 ─────────────────────── */
+.divide-soft > * + * { border-top: 1px solid var(--border-soft); }
+
+/* ── Row card hover (관리자 리스트 카드) ─────────────────────────── */
+.row-card { transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.row-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  box-shadow: 0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);
+  transform: translateY(-1px);
+}
+.dark .row-card:hover {
+  box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+}
+
+/* ── 단축키 키캡 ─────────────────────────────────────────────────── */
+.kbd {
+  display: inline-flex; align-items: center;
+  padding: 1px 6px; font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--gray-900); border: 1px solid var(--border);
+  border-bottom-width: 2px; border-radius: 4px;
+  color: var(--gray-500);
 }
 
 /* ── 다크 모드 ───────────────────────────────────────────────────── */
@@ -59,3 +295,156 @@
     background: var(--gray-600);
   }
 }
+
+/* ── 가이드 본문 마크다운 렌더 ────────────────────────────────────────────
+   react-markdown 이 만들어내는 표준 태그(h1~h3, p, ul/ol/li, strong/em, code/pre,
+   blockquote, hr, a, table) 에 미니멀한 가독성 스타일을 입힌다. 라이트/다크는
+   상속과 `.dark .guide-md *` 변형으로 처리한다. */
+.guide-md > * + * { margin-top: 0.75rem; }
+.guide-md h1 { font-size: 1.25rem; font-weight: 700; line-height: 1.4; letter-spacing: -0.01em; margin-top: 1.5rem; }
+.guide-md h2 { font-size: 1.125rem; font-weight: 700; line-height: 1.45; letter-spacing: -0.01em; margin-top: 1.25rem; }
+.guide-md h3 { font-size: 1rem; font-weight: 600; line-height: 1.5; margin-top: 1rem; }
+.guide-md p  { line-height: 1.7; }
+.guide-md ul { list-style: disc; padding-left: 1.25rem; }
+.guide-md ol { list-style: decimal; padding-left: 1.25rem; }
+.guide-md li { margin: 0.25rem 0; line-height: 1.6; }
+.guide-md li > ul, .guide-md li > ol { margin-top: 0.25rem; }
+.guide-md strong { font-weight: 700; color: inherit; }
+.guide-md em { font-style: italic; }
+.guide-md a {
+  color: #0d9488;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.dark .guide-md a { color: #67e8f9; }
+.guide-md code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.85em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.06);
+}
+.dark .guide-md code { background: rgba(255, 255, 255, 0.08); }
+.guide-md pre {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  font-size: 0.85em;
+  line-height: 1.55;
+}
+.dark .guide-md pre {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.guide-md pre > code { background: transparent; padding: 0; }
+.guide-md blockquote {
+  border-left: 3px solid rgba(20, 184, 166, 0.55);
+  padding: 0.25rem 0 0.25rem 0.85rem;
+  color: rgba(15, 23, 42, 0.7);
+}
+.dark .guide-md blockquote {
+  border-left-color: rgba(34, 211, 238, 0.55);
+  color: rgba(255, 255, 255, 0.7);
+}
+.guide-md hr {
+  border: none;
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  margin: 1.25rem 0;
+}
+.dark .guide-md hr { border-top-color: rgba(255, 255, 255, 0.12); }
+.guide-md table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+.guide-md th, .guide-md td {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+}
+.dark .guide-md th, .dark .guide-md td { border-color: rgba(255, 255, 255, 0.12); }
+.guide-md th { font-weight: 600; background: rgba(15, 23, 42, 0.04); }
+.dark .guide-md th { background: rgba(255, 255, 255, 0.05); }
+
+/* ── 챗봇 답변 마크다운 렌더 ─────────────────────────────────────────────
+   메시지 버블 안에서 동작하므로 가이드 본문보다 간격을 좁히고, 시작/끝 여백을
+   제거해 버블 padding 과 자연스럽게 연결되도록 한다. */
+.chat-md > *:first-child { margin-top: 0; }
+.chat-md > *:last-child  { margin-bottom: 0; }
+.chat-md > * + * { margin-top: 0.5rem; }
+.chat-md h1, .chat-md h2, .chat-md h3 {
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 0.75rem;
+}
+.chat-md h1 { font-size: 1.05rem; }
+.chat-md h2 { font-size: 1rem; }
+.chat-md h3 { font-size: 0.95rem; }
+.chat-md p  { line-height: 1.55; }
+.chat-md ul { list-style: disc; padding-left: 1.1rem; }
+.chat-md ol { list-style: decimal; padding-left: 1.25rem; }
+.chat-md li { margin: 0.15rem 0; line-height: 1.5; }
+.chat-md li > ul, .chat-md li > ol { margin-top: 0.15rem; }
+.chat-md strong { font-weight: 700; color: inherit; }
+.chat-md em { font-style: italic; }
+.chat-md a {
+  color: #4f46e5;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+.dark .chat-md a { color: #a5b4fc; }
+.chat-md code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.85em;
+  padding: 0.08em 0.32em;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.08);
+}
+.dark .chat-md code { background: rgba(255, 255, 255, 0.1); }
+.chat-md pre {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  background: rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  overflow-x: auto;
+  font-size: 0.8em;
+  line-height: 1.5;
+}
+.dark .chat-md pre {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.chat-md pre > code { background: transparent; padding: 0; }
+.chat-md blockquote {
+  border-left: 3px solid rgba(99, 102, 241, 0.5);
+  padding: 0.1rem 0 0.1rem 0.6rem;
+  color: rgba(15, 23, 42, 0.7);
+}
+.dark .chat-md blockquote {
+  border-left-color: rgba(165, 180, 252, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+}
+.chat-md hr {
+  border: none;
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+  margin: 0.75rem 0;
+}
+.dark .chat-md hr { border-top-color: rgba(255, 255, 255, 0.14); }
+.chat-md table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86em;
+}
+.chat-md th, .chat-md td {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 0.3rem 0.45rem;
+  text-align: left;
+}
+.dark .chat-md th, .dark .chat-md td { border-color: rgba(255, 255, 255, 0.14); }
+.chat-md th { font-weight: 600; background: rgba(15, 23, 42, 0.05); }
+.dark .chat-md th { background: rgba(255, 255, 255, 0.06); }

@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { placeOrderBuy, placeOrderSell, cancelPendingOrder } from '@/services/stockApi'
+import { getMyAccounts } from '@/services/authApi'
 import { useStockStore } from '@/store/stockStore'
+import { useAuthStore } from '@/store/authStore'
 import type { OrderType, TradeOrderResponse } from '@/types/stock'
+import type { AccountResult } from '@/types/auth'
 
 interface Props {
   stockCode: string
@@ -16,6 +19,7 @@ const fmt = (n: number) => n.toLocaleString('ko-KR')
 export function TradePanel({ stockCode, stockName, currentPrice }: Props) {
   const accountId    = useStockStore((s) => s.accountId)
   const setAccountId = useStockStore((s) => s.setAccountId)
+  const token        = useAuthStore((s) => s.token)
 
   const [side, setSide]             = useState<Side>('BUY')
   const [orderType, setOrderType]   = useState<OrderType>('MARKET')
@@ -25,6 +29,43 @@ export function TradePanel({ stockCode, stockName, currentPrice }: Props) {
   const [result, setResult]         = useState<TradeOrderResponse | null>(null)
   const [error, setError]           = useState<string | null>(null)
   const [cancelling, setCancelling] = useState(false)
+
+  // 계좌 드롭다운
+  const [accounts, setAccounts]         = useState<AccountResult[]>([])
+  const [showAccounts, setShowAccounts] = useState(false)
+  const [loadingAccounts, setLoadingAccounts] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowAccounts(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleFetchAccounts = async () => {
+    if (showAccounts) { setShowAccounts(false); return }
+    setLoadingAccounts(true)
+    try {
+      const list = await getMyAccounts(token ?? undefined)
+      setAccounts(list)
+      setShowAccounts(true)
+    } catch {
+      setError('계좌 목록 조회 실패')
+    } finally {
+      setLoadingAccounts(false)
+    }
+  }
+
+  const handleSelectAccount = (acc: AccountResult) => {
+    setAccountId(acc.accountId)
+    setShowAccounts(false)
+    setError(null)
+  }
 
   // 종목 변경 시 결과 초기화
   useEffect(() => {
@@ -89,16 +130,53 @@ export function TradePanel({ stockCode, stockName, currentPrice }: Props) {
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      {/* ── 계좌 ID ────────────────────────────────────────── */}
-      <div>
-        <label className="text-xs text-gray-500 mb-1 block">계좌 ID</label>
-        <input
-          type="text"
-          value={accountId}
-          onChange={(e) => setAccountId(e.target.value)}
-          placeholder="UUID"
-          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-gray-200 placeholder-gray-600 outline-none focus:border-indigo-500 transition-colors"
-        />
+      {/* ── 계좌 선택 ──────────────────────────────────────── */}
+      <div className="relative" ref={dropdownRef}>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs text-gray-500">계좌</label>
+          <button
+            onClick={handleFetchAccounts}
+            disabled={loadingAccounts}
+            className="text-[10px] px-2 py-0.5 rounded bg-indigo-800 hover:bg-indigo-700 text-indigo-200 transition-colors disabled:opacity-50"
+          >
+            {loadingAccounts ? '조회 중…' : '계좌 조회'}
+          </button>
+        </div>
+
+        {/* 선택된 계좌 표시 */}
+        <div className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-gray-200 min-h-[30px]">
+          {accountId
+            ? (() => {
+                const acc = accounts.find((a) => a.accountId === accountId)
+                return acc
+                  ? <span>{acc.accountNumber} <span className="text-gray-500">({acc.accountAmount.toLocaleString()}원)</span></span>
+                  : <span className="text-gray-400 text-[10px] break-all">{accountId}</span>
+              })()
+            : <span className="text-gray-600">계좌를 선택하세요</span>
+          }
+        </div>
+
+        {/* 드롭다운 목록 */}
+        {showAccounts && (
+          <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
+            {accounts.length === 0 ? (
+              <p className="text-[11px] text-gray-500 px-3 py-2">계좌가 없습니다</p>
+            ) : (
+              accounts.map((acc) => (
+                <button
+                  key={acc.accountId}
+                  onClick={() => handleSelectAccount(acc)}
+                  className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-indigo-800 ${
+                    accountId === acc.accountId ? 'bg-indigo-900 text-indigo-200' : 'text-gray-200'
+                  }`}
+                >
+                  <p className="font-mono">{acc.accountNumber}</p>
+                  <p className="text-[10px] text-gray-400">{acc.accountAmount.toLocaleString()}원</p>
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── 매수 / 매도 탭 ─────────────────────────────────── */}

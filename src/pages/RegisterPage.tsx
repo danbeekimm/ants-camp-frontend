@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { register } from '@/services/authApi'
+import { Alert } from '@/components/ui/Alert'
 
 // 백엔드 @Pattern 과 동일한 정규식
 const PW_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/
@@ -46,10 +47,7 @@ export function RegisterPage() {
   return (
     <div className="min-h-[calc(100vh-57px)] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-xl font-bold text-gray-100">회원가입</h1>
-          <p className="text-xs text-gray-500 mt-1">AntsCamp 계정을 만들어 보세요</p>
-        </div>
+        <p className="text-xs text-gray-500 text-center mb-8">AntCamp 계정을 만들어 보세요</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
@@ -82,9 +80,7 @@ export function RegisterPage() {
           </div>
 
           {error && (
-            <p className="text-xs text-red-400 bg-red-950 border border-red-800 rounded-xl px-4 py-2.5 leading-relaxed">
-              {error}
-            </p>
+            <Alert>{error}</Alert>
           )}
 
           <button type="submit" disabled={loading}
@@ -93,11 +89,8 @@ export function RegisterPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-gray-500">
-          이미 계정이 있으신가요?{' '}
-          <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">로그인</Link>
-        </p>
       </div>
     </div>
   )
 }
+

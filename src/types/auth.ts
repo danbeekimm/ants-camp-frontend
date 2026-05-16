@@ -60,7 +60,7 @@ export interface CompetitionChangeNotice {
 export interface CompetitionParticipant {
   participantId: string
   userId:        string
-  nickname:      string
+  username:      string           // 백엔드 응답 필드 (form 의 nickname 이 username 으로 저장됨)
   competitionId: string
 }
 
@@ -69,6 +69,8 @@ export interface CompetitionRanking {
   rank:       number
   userId:     string
   totalAsset: number
+  // 백엔드는 참가자 nickname 을 username 키로 응답 (참가자 API 와 동일)
+  username?:  string
 }
 
 // ── 계좌 (asset-service) ───────────────────────────────────────────────────

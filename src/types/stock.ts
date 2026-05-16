@@ -56,6 +56,7 @@ export interface TradeOrderRequest {
   orderType: OrderType
   side: 'BUY' | 'SELL'   // 매수 | 매도
   limitPrice?: number     // 지정가 주문 시 필수, 시장가는 생략
+  accountId: string       // 계좌 ID (body로 전달)
 }
 
 // ─── 주문 결과 응답 ────────────────────────────────────────────────────────

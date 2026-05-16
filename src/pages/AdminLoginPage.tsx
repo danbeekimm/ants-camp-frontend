@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { adminLogin } from '@/services/authApi'
 import { useAuthStore } from '@/store/authStore'
+import { Alert } from '@/components/ui/Alert'
 
 export function AdminLoginPage() {
   const navigate = useNavigate()
@@ -17,6 +18,10 @@ export function AdminLoginPage() {
     setLoading(true); setError(null)
     try {
       const { user, accessToken, refreshToken } = await adminLogin({ email, password })
+      if (user.role !== 'ADMIN' && user.role !== 'MANAGER') {
+        setError('관리자 및 매니저 계정만 이용할 수 있습니다.')
+        return
+      }
       setAuth(user, accessToken, refreshToken)
       navigate('/admin')
     } catch (err) {
@@ -60,9 +65,7 @@ export function AdminLoginPage() {
           </div>
 
           {error && (
-            <p className="text-xs text-red-400 bg-red-950 border border-red-800 rounded-xl px-4 py-2.5">
-              {error}
-            </p>
+            <Alert>{error}</Alert>
           )}
 
           <button

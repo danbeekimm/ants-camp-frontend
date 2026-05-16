@@ -1,4 +1,5 @@
 import type {
+  User,
   LoginRequest, RegisterRequest, AuthResponse,
   Competition, CompetitionRanking, CompetitionParticipant, CompetitionChangeNotice,
   AccountResult, AssetResult, HoldingItem, AccountPortfolio,
@@ -84,12 +85,12 @@ export async function register(req: RegisterRequest): Promise<void> {
   if (!res.ok) throw new Error(await extractError(res))
 }
 
-/** GET /api/users/me  (Header: X-User-Id) */
-export async function getMyInfo(userId: string, token: string) {
+/** GET /api/users/me  — 서버에서 최신 사용자 정보 조회 */
+export async function getMyInfo(userId: string, token: string): Promise<User> {
   const res = await fetch('/api/users/me', {
     headers: { ...authHeaders(token), 'X-User-Id': userId },
   })
-  return unwrap(res)
+  return unwrap<User>(res)
 }
 
 // ── 대회 (/api/competitions) ───────────────────────────────────────────────
@@ -122,6 +123,35 @@ export async function getCompetitions(params?: {
 export async function getCompetition(id: string): Promise<Competition> {
   const res = await fetch(`/api/competitions/${id}`, {
     headers: authHeaders(localStorage.getItem('accessToken')),
+  })
+  return unwrap<Competition>(res)
+}
+
+/** PATCH /api/competitions/{id} — 대회 정보 수정 */
+export interface UpdateCompetitionRequest {
+  name:               string
+  description:        string
+  registerStartAt:    string
+  registerEndAt:      string
+  competitionStartAt: string
+  competitionEndAt:   string
+  minParticipants:    number
+  maxParticipants:    number
+  beforeContents?:    string
+  afterContents?:     string
+  reason?:            string
+  updatedBy?:         string
+}
+
+export async function updateCompetition(
+  id: string,
+  req: UpdateCompetitionRequest,
+  accessToken: string,
+): Promise<Competition> {
+  const res = await fetch(`/api/competitions/${id}`, {
+    method:  'PATCH',
+    headers: authHeaders(accessToken),
+    body:    JSON.stringify(req),
   })
   return unwrap<Competition>(res)
 }
@@ -206,8 +236,7 @@ export async function getParticipants(
 
 /**
  * POST /api/competitions/{competitionId}/participants
- * Body: { userId, nickname }
- * 기존 joinCompetition(id, token) 에서 userId, nickname 필요하도록 변경
+ * Header: X-User-Id, X-User-Name (URL encoded)
  */
 export async function joinCompetition(
   competitionId: string,
@@ -217,8 +246,11 @@ export async function joinCompetition(
 ): Promise<CompetitionParticipant> {
   const res = await fetch(`/api/competitions/${competitionId}/participants`, {
     method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify({ userId, nickname }),
+    headers: {
+      ...authHeaders(accessToken),
+      'X-User-Id': userId,
+      'X-User-Name': encodeURIComponent(nickname),
+    },
   })
   return unwrap<CompetitionParticipant>(res)
 }
@@ -240,6 +272,32 @@ export async function cancelJoinCompetition(
 
 // ── 랭킹 (/api/rankings) ──────────────────────────────────────────────────
 
+/** GET /api/rankings/competitions/{competitionId}/me — 내 순위 */
+export async function getMyRanking(
+  competitionId: string,
+): Promise<CompetitionRanking | null> {
+  try {
+    const res = await fetch(`/api/rankings/competitions/${competitionId}/me`, {
+      headers: authHeaders(localStorage.getItem('accessToken')),
+    })
+    if (!res.ok) return null
+    const json = await res.json()
+    const d = 'data' in json ? json.data : json
+    return { rank: Number(d.rank), userId: String(d.userId), totalAsset: Number(d.totalAsset) }
+  } catch {
+    return null
+  }
+}
+
+/** POST /api/rankings/competitions/{competitionId}/finalize — 최종 순위 확정 */
+export async function finalizeRankings(competitionId: string): Promise<void> {
+  const res = await fetch(`/api/rankings/competitions/${competitionId}/finalize`, {
+    method:  'POST',
+    headers: authHeaders(localStorage.getItem('accessToken')),
+  })
+  if (!res.ok) throw new Error(await extractError(res))
+}
+
 /** GET /api/rankings/competitions/{competitionId}?page=&size= */
 export async function getCompetitionRankings(
   competitionId: string,
@@ -248,22 +306,12 @@ export async function getCompetitionRankings(
 ): Promise<CompetitionRanking[]> {
   const res = await fetch(
     `/api/rankings/competitions/${competitionId}?page=${page}&size=${size}`,
+    { headers: authHeaders(localStorage.getItem('accessToken')) },
   )
   const json = await res.json()
   if (!res.ok) throw new Error(json?.message ?? '랭킹 조회 실패')
   // 직접 배열 or ApiResponse<배열>
   return Array.isArray(json) ? json : (json?.data ?? json?.content ?? [])
-}
-
-/** GET /api/rankings/competitions/{competitionId}/users/{userId} */
-export async function getMyRanking(
-  competitionId: string,
-  userId: string,
-): Promise<CompetitionRanking> {
-  const res = await fetch(
-    `/api/rankings/competitions/${competitionId}/users/${userId}`,
-  )
-  return unwrap<CompetitionRanking>(res)
 }
 
 // ── 계좌 / 자산 / 보유 종목 (/api/accounts, /api/assets, /api/holdings) ───
@@ -321,10 +369,16 @@ export async function getAccountDetail(
   return { account, asset, holdings }
 }
 
-// ── getMyAccounts: 백엔드 미지원 → 빈 배열 반환 (추후 구현 예정) ───────────
-export async function getMyAccounts(_accessToken: string): Promise<AccountResult[]> {
-  return []
+/** GET /api/accounts — 내 계좌 목록 (게이트웨이가 X-User-Id 자동 주입) */
+export async function getMyAccounts(token?: string): Promise<AccountResult[]> {
+  const res = await fetch('/api/accounts', { headers: authHeaders(token) })
+  if (!res.ok) return []
+  const json = await res.json().catch(() => null)
+  if (!json) return []
+  const data = 'data' in json ? json.data : json
+  return Array.isArray(data) ? data : []
 }
+
 
 // ── 매매 이력: 백엔드 미지원 → 빈 배열 반환 ──────────────────────────────
 export async function getTradeHistory(
@@ -334,10 +388,62 @@ export async function getTradeHistory(
   return []
 }
 
-// ── 어드민 매니저: 백엔드 미지원 → stub ────────────────────────────────────
-export async function getManagers(_accessToken: string) { return [] }
-export async function createManager(_req: unknown, _accessToken: string) { /* stub */ }
-export async function deleteManager(_userId: string, _accessToken: string) { /* stub */ }
+// ── 장 운영 상태 ─────────────────────────────────────────────────────────────
+
+export interface MarketStatus {
+  openTime:  string
+  closeTime: string
+  isHoliday: boolean
+  message:   string
+}
+
+export async function getMarketStatus(): Promise<MarketStatus | null> {
+  try {
+    const res = await fetch('/api/market/status', {
+      headers: authHeaders(localStorage.getItem('accessToken')),
+    })
+    if (!res.ok) return null
+    const json = await res.json()
+    return ('data' in json ? json.data : json) as MarketStatus
+  } catch {
+    return null
+  }
+}
+
+// ── 어드민: 사용자 관리 ──────────────────────────────────────────────────────
+
+export interface AdminUser {
+  userId: string
+  email:  string
+  name:   string
+  role:   string
+  phone:  string
+}
+
+export interface CreateManagerRequest {
+  email:    string
+  password: string
+  name:     string
+  phone:    string
+}
+
+/** GET /api/admin/users */
+export async function getAllUsers(): Promise<AdminUser[]> {
+  const res = await fetch('/api/admin/users', {
+    headers: authHeaders(localStorage.getItem('accessToken')),
+  })
+  return unwrap<AdminUser[]>(res)
+}
+
+/** POST /api/admin/users/manager */
+export async function createManager(req: CreateManagerRequest): Promise<AdminUser> {
+  const res = await fetch('/api/admin/users/manager', {
+    method:  'POST',
+    headers: authHeaders(localStorage.getItem('accessToken')),
+    body:    JSON.stringify(req),
+  })
+  return unwrap<AdminUser>(res)
+}
 
 // ── 프로필 수정: 백엔드 미지원 → stub ─────────────────────────────────────
 export async function updateProfile(

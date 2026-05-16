@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login } from '@/services/authApi'
 import { useAuthStore } from '@/store/authStore'
+import { Alert } from '@/components/ui/Alert'
 
 export function LoginPage() {
   const navigate  = useNavigate()
@@ -17,6 +18,10 @@ export function LoginPage() {
     setLoading(true); setError(null)
     try {
       const { user, accessToken, refreshToken } = await login({ email, password })
+      if (user.role === 'ADMIN' || user.role === 'MANAGER') {
+        setError('관리자 계정은 관리자 로그인 페이지를 이용해주세요.')
+        return
+      }
       setAuth(user, accessToken, refreshToken)
       navigate('/')
     } catch (err) {
@@ -29,16 +34,7 @@ export function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-57px)] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2"
-              strokeLinecap="round" viewBox="0 0 24 24">
-              <path d="M3 17l6-6 4 4 8-8" />
-            </svg>
-          </div>
-          <h1 className="text-xl font-bold text-gray-100">로그인</h1>
-          <p className="text-xs text-gray-500 mt-1">AntsCamp에 오신 것을 환영합니다</p>
-        </div>
+        <p className="text-xs text-gray-500 text-center mb-8">AntCamp에 오신 것을 환영합니다</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
@@ -59,9 +55,7 @@ export function LoginPage() {
           </div>
 
           {error && (
-            <p className="text-xs text-red-400 bg-red-950 border border-red-800 rounded-xl px-4 py-2.5">
-              {error}
-            </p>
+            <Alert>{error}</Alert>
           )}
 
           <button
@@ -72,13 +66,11 @@ export function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-xs text-gray-500 flex items-center justify-center gap-3">
-          <span>계정이 없으신가요?</span>
-          <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">회원가입</Link>
-          <span>·</span>
-          <Link to="/admin/login" className="text-gray-600 hover:text-gray-400">관리자 로그인</Link>
+        <div className="mt-6 text-center text-xs">
+          <Link to="/admin/login" className="text-gray-500 hover:text-gray-300 transition-colors">관리자 로그인 →</Link>
         </div>
       </div>
     </div>
   )
 }
+
