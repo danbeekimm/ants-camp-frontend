@@ -14,11 +14,8 @@ export async function searchStocks(
   query: string,
   limit = 20,
 ): Promise<StockSearchResult[]> {
-  const token = localStorage.getItem('accessToken')
   const params = new URLSearchParams({ q: query, limit: String(limit) })
-  const res = await fetch(`${BASE_URL}/stocks/search?${params}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  })
+  const res = await fetch(`${BASE_URL}/stocks/search?${params}`)
   if (!res.ok) throw new Error('종목 검색 실패')
   return res.json()
 }
@@ -27,10 +24,8 @@ export async function searchStocks(
  * 종목 실시간 구독 등록 (체결가 + 호가 동시)
  */
 export async function subscribeStock(stockCode: string): Promise<void> {
-  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/stocks/realtime/${stockCode}`, {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!res.ok) throw new Error(`${stockCode} 구독 등록 실패`)
 }
@@ -39,10 +34,8 @@ export async function subscribeStock(stockCode: string): Promise<void> {
  * 종목 실시간 구독 해제
  */
 export async function unsubscribeStock(stockCode: string): Promise<void> {
-  const token = localStorage.getItem('accessToken')
   const res = await fetch(`${BASE_URL}/stocks/realtime/${stockCode}`, {
     method: 'DELETE',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!res.ok) throw new Error(`${stockCode} 구독 해제 실패`)
 }
@@ -51,10 +44,7 @@ export async function unsubscribeStock(stockCode: string): Promise<void> {
  * KIS WebSocket 연결 상태 확인
  */
 export async function getKisStatus(): Promise<string> {
-  const token = localStorage.getItem('accessToken')
-  const res = await fetch(`${BASE_URL}/trades/realtime/status`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  })
+  const res = await fetch(`${BASE_URL}/trades/realtime/status`)
   if (!res.ok) return 'KIS WebSocket 미연결'
   return res.text()
 }

@@ -162,9 +162,7 @@ export async function getCompetitions(params?: {
   if (params?.status) q.set('status', params.status)
   if (params?.page   != null) q.set('page', String(params.page))
   if (params?.size   != null) q.set('size', String(params.size))
-  const res = await fetch(`/api/competitions?${q}`, {
-    headers: authHeaders(localStorage.getItem('accessToken')),
-  })
+  const res = await fetch(`/api/competitions?${q}`)
   if (!res.ok) {
     const errText = await res.text()
     console.error('[getCompetitions] 오류 응답:', res.status, errText)
@@ -178,9 +176,7 @@ export async function getCompetitions(params?: {
 
 /** GET /api/competitions/{id} */
 export async function getCompetition(id: string): Promise<Competition> {
-  const res = await fetch(`/api/competitions/${id}`, {
-    headers: authHeaders(localStorage.getItem('accessToken')),
-  })
+  const res = await fetch(`/api/competitions/${id}`)
   return unwrap<Competition>(res)
 }
 
