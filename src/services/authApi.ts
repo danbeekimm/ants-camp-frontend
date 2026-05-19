@@ -424,7 +424,9 @@ export async function getAccountDetail(
 
 /** GET /api/accounts — 내 계좌 목록 (게이트웨이가 X-User-Id 자동 주입) */
 export async function getMyAccounts(token?: string): Promise<AccountResult[]> {
-  const res = await fetchWithAuth('/api/accounts', { headers: authHeaders(token) })
+  // 항상 최신 localStorage 토큰 사용
+  const currentToken = localStorage.getItem('accessToken') ?? token
+  const res = await fetchWithAuth('/api/accounts', { headers: authHeaders(currentToken) })
   if (!res.ok) return []
   const json = await res.json().catch(() => null)
   if (!json) return []
