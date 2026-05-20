@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useStockStore } from '@/store/stockStore'
-import { fetchCandleData } from '@/services/stockApi'
+import { fetchCandleData, fetchStockPriceList } from '@/services/stockApi'
 import { PriceChart } from './PriceChart'
 import { OrderBook } from './OrderBook'
 import { CandleChart } from './CandleChart'
@@ -27,6 +27,7 @@ export function StockDetail() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [lastFetched, setLastFetched] = useState<Date | null>(null)
+  const [restPrice, setRestPrice] = useState<number | null>(null) // REST 폴백 현재가
 
   const isDateBased = timeframe === '1d' || timeframe === '1w' || timeframe === '1M'
 
@@ -52,6 +53,16 @@ export function StockDetail() {
       loadCandles(selectedCode, timeframe)
     }
   }, [selectedCode, tab, timeframe, loadCandles])
+
+  // STOMP 가격 없을 때 REST로 현재가 조회
+  useEffect(() => {
+    if (!selectedCode) return
+    const stompPrice = stocks[selectedCode]?.price?.currentPrice
+    if (stompPrice) { setRestPrice(null); return }
+    fetchStockPriceList([selectedCode])
+      .then((map) => setRestPrice(map[selectedCode] ?? null))
+      .catch(() => {})
+  }, [selectedCode, stocks])
 
   // ── 렌더 ──────────────────────────────────────────────────────────
   if (!selectedCode) {
@@ -217,7 +228,7 @@ export function StockDetail() {
           <TradePanel
             stockCode={stock.stockCode}
             stockName={stock.stockName}
-            currentPrice={price?.currentPrice ?? null}
+            currentPrice={price?.currentPrice ?? restPrice}
           />
         </div>
       </div>
