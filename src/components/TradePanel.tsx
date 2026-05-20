@@ -215,16 +215,20 @@ export function TradePanel({ stockCode, stockName, currentPrice }: Props) {
       </div>
 
       {/* ── 종목 + 현재가 ─────────────────────────────────── */}
-      <div className="bg-gray-900 rounded-lg px-3 py-2 flex items-center justify-between">
+      <div className="bg-gray-900 rounded-lg px-3 py-2.5 flex items-center justify-between">
         <div>
-          <p className="text-xs text-gray-500">{stockCode}</p>
+          <p className="text-[10px] text-gray-500">{stockCode}</p>
           <p className="text-xs font-semibold text-gray-200 truncate max-w-[90px]">{stockName}</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] text-gray-500">현재가</p>
-          <p className="text-xs font-mono font-bold text-gray-100">
-            {currentPrice ? `${fmt(currentPrice)}` : '—'}
-          </p>
+          <p className="text-[10px] text-gray-500 mb-0.5">현재가</p>
+          {currentPrice ? (
+            <p className="text-base font-mono font-bold text-gray-100">
+              {fmt(currentPrice)}<span className="text-xs text-gray-500 ml-0.5">원</span>
+            </p>
+          ) : (
+            <p className="text-xs text-gray-600">조회 중…</p>
+          )}
         </div>
       </div>
 
