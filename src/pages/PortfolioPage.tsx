@@ -11,7 +11,7 @@ import { formatAccountLabel } from '@/utils/formatAccount'
 import type { AccountResult, AccountPortfolio } from '@/types/auth'
 
 export function PortfolioPage() {
-  const { token, user } = useAuthStore()
+  const { user } = useAuthStore()
   const { isDark }      = useThemeStore()
   const navigate        = useNavigate()
 

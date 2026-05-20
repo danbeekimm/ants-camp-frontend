@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { getMyInfo, getMyRankingHistory, getCompetition } from '@/services/authApi'
-import type { MyRankingHistory, Competition } from '@/types/auth'
+import type { MyRankingHistory } from '@/types/auth'
 
 const ROLE_LABEL: Record<string, string> = {
   ADMIN:   '관리자',
