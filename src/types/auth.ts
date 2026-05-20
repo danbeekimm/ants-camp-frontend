@@ -124,3 +124,9 @@ export interface Manager {
   nickname:  string
   createdAt: string
 }
+
+export interface MyRankingHistory {
+  competitionId: string
+  rankTier:      string
+  lastUpdatedAt: string
+}

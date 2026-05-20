@@ -510,3 +510,17 @@ export async function updateProfile(
 ): Promise<void> {
   throw new Error('프로필 수정 기능은 현재 지원되지 않습니다.')
 }
+
+/** GET /api/rankings/me — 내 대회 참여 이력 */
+export async function getMyRankingHistory(): Promise<import('@/types/auth').MyRankingHistory[]> {
+  try {
+    const res = await fetchWithAuth('/api/rankings/me', {
+      headers: authHeaders(localStorage.getItem('accessToken')),
+    })
+    if (!res.ok) return []
+    const json = await res.json()
+    return (json?.data ?? []) as import('@/types/auth').MyRankingHistory[]
+  } catch {
+    return []
+  }
+}
