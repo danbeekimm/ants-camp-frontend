@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { adminLogin } from '@/services/authApi'
 import { useAuthStore } from '@/store/authStore'
 import { Alert } from '@/components/ui/Alert'
@@ -51,7 +51,7 @@ export function AdminLoginPage() {
             <label className="text-xs text-gray-400 mb-1.5 block">이메일</label>
             <input
               type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              required placeholder="admin@example.com"
+              required
               className="w-full bg-gray-900 border border-amber-900 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 outline-none focus:border-amber-500 transition-colors"
             />
           </div>
@@ -59,7 +59,7 @@ export function AdminLoginPage() {
             <label className="text-xs text-gray-400 mb-1.5 block">비밀번호</label>
             <input
               type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              required placeholder="••••••••"
+              required
               className="w-full bg-gray-900 border border-amber-900 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 outline-none focus:border-amber-500 transition-colors"
             />
           </div>
@@ -75,12 +75,6 @@ export function AdminLoginPage() {
             {loading ? '로그인 중...' : '관리자 로그인'}
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <Link to="/login" className="text-xs text-gray-600 hover:text-gray-400">
-            ← 일반 로그인으로 돌아가기
-          </Link>
-        </div>
       </div>
     </div>
   )
