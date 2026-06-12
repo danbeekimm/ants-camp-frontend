@@ -90,8 +90,8 @@ export function MarketTicker() {
       fetch(`/api/trades/realtime/${code}`, { method: 'POST', headers }).catch(() => {})
     })
     const wsUrl = window.location.protocol === 'https:'
-      ? `wss://api.antcamp.site/ws-stomp`
-      : `ws://api.antcamp.site/ws-stomp`
+      ? `wss://${window.location.host}/ws-stomp`
+      : `ws://${window.location.host}/ws-stomp`
     const client = new Client({
       brokerURL: wsUrl, reconnectDelay: 5000,
       onConnect: () => {

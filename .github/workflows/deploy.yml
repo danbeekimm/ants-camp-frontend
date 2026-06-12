@@ -1,0 +1,61 @@
+name: Frontend CD
+
+# main push → 빌드 → dist를 OCI 인스턴스로 전송 → 원자적 교체
+#   - 정적 파일만 교체하므로 서비스 재시작 불필요 (nginx가 그대로 서빙)
+#   - Secrets는 백엔드 레포(AntCamp CD)와 동일: OCI_HOST / OCI_USER / OCI_SSH_KEY / OCI_APP_DIR (+선택 OCI_PORT)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: frontend-cd
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    name: 빌드·배포
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: dist 전송 (임시 디렉터리)
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          port: ${{ secrets.OCI_PORT || 22 }}
+          source: dist
+          target: ${{ secrets.OCI_APP_DIR }}/frontend/.deploy-tmp
+          rm: true
+
+      - name: 원자적 교체
+        uses: appleboy/ssh-action@v1
+        env:
+          APP_DIR: ${{ secrets.OCI_APP_DIR }}
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          port: ${{ secrets.OCI_PORT || 22 }}
+          envs: APP_DIR
+          script: |
+            set -euo pipefail
+            cd "$APP_DIR/frontend"
+            rm -rf dist.old
+            if [ -d dist ]; then mv dist dist.old; fi
+            mv .deploy-tmp/dist dist
+            rmdir .deploy-tmp
+            echo "배포 완료: $(date -u +%FT%TZ)"

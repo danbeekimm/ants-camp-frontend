@@ -20,10 +20,11 @@ export function useStompClient() {
 
   // ── 초기 연결 (마운트 1회) ─────────────────────────────────────────────
   useEffect(() => {
+    // same-origin: 프로덕션은 nginx, 개발은 vite 프록시가 게이트웨이로 전달
     const wsUrl =
       window.location.protocol === 'https:'
-        ? 'wss://api.antcamp.site/ws-stomp'
-        : 'ws://api.antcamp.site/ws-stomp'
+        ? `wss://${window.location.host}/ws-stomp`
+        : `ws://${window.location.host}/ws-stomp`
 
     const client = new Client({
       brokerURL: wsUrl,
