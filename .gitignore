@@ -5,6 +5,9 @@ node_modules/
 dist/
 dist-ssr/
 
+# vite가 TS 설정 변환 시 만드는 임시 파일 (비정상 종료 시 잔류)
+vite.config.ts.timestamp-*
+
 # 환경변수
 .env
 .env.local
