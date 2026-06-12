@@ -1,0 +1,25 @@
+name: Frontend CI
+
+# PR 빌드 검증 — tsc 타입 체크 + vite 빌드
+# (npm run lint는 ESLint 설정 파일 부재로 깨져 있어 제외 — 설정 복구 후 추가)
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: 빌드 검증
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
