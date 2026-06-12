@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- 백엔드 raw 응답을 프론트 타입으로 매핑하는 경계 파일 */
 // ── 공통 ──────────────────────────────────────────────────────────────────
 import { fetchWithAuth } from './authApi'
 

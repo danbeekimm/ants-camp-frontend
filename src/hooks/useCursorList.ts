@@ -34,7 +34,7 @@ export function useCursorList<T>(fetcher: (cursor?: string) => Promise<CursorPag
         setState({ items: page.items, hasNext: page.hasNext, loading: false, error: null })
         nextCursorRef.current = page.nextCursor
       })
-      .catch((e: any) => {
+      .catch((e) => {
         if (cancelled) return
         setState({ items: [], hasNext: false, loading: false, error: e?.message ?? '오류가 발생했습니다.' })
       })
@@ -56,7 +56,7 @@ export function useCursorList<T>(fetcher: (cursor?: string) => Promise<CursorPag
         }))
         nextCursorRef.current = page.nextCursor
       })
-      .catch((e: any) => {
+      .catch((e) => {
         setState((s) => ({ ...s, loading: false, error: e?.message ?? '오류가 발생했습니다.' }))
       })
   }, [])

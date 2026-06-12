@@ -77,7 +77,7 @@ export function CompetitionDetailPage() {
         }
       })
       .catch(() => { /* 조회 실패 시 미참가로 간주 */ })
-  }, [id, user?.userId, user?.name])
+  }, [id, user?.userId, user?.name]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadParticipants = async () => {
     if (!id || participants.length > 0) return

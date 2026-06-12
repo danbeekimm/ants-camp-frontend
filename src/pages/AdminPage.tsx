@@ -82,8 +82,8 @@ function CompetitionTab({token}: {token: string}) {
 				maxParticipants: 100,
 			});
 			load();
-		} catch (e: any) {
-			alert(e?.message ?? "생성 실패");
+		} catch (e) {
+			alert(e instanceof Error ? e.message : "생성 실패");
 		} finally {
 			setLoading(false);
 		}
@@ -96,8 +96,8 @@ function CompetitionTab({token}: {token: string}) {
 		try {
 			await patchCompetitionStatus(id, action, token);
 			load();
-		} catch (e: any) {
-			alert(e?.message ?? "상태 변경 실패");
+		} catch (e) {
+			alert(e instanceof Error ? e.message : "상태 변경 실패");
 		}
 	};
 
@@ -106,8 +106,8 @@ function CompetitionTab({token}: {token: string}) {
 		try {
 			await deleteCompetition(id, token);
 			load();
-		} catch (e: any) {
-			alert(e?.message ?? "삭제 실패");
+		} catch (e) {
+			alert(e instanceof Error ? e.message : "삭제 실패");
 		}
 	};
 

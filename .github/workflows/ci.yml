@@ -1,7 +1,6 @@
 name: Frontend CI
 
-# PR 빌드 검증 — tsc 타입 체크 + vite 빌드
-# (npm run lint는 ESLint 설정 파일 부재로 깨져 있어 제외 — 설정 복구 후 추가)
+# PR 검증 — ESLint + tsc 타입 체크 + vite 빌드
 
 on:
   pull_request:
@@ -21,5 +20,7 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - run: npm run lint
 
       - run: npm run build

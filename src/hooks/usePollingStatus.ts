@@ -25,9 +25,9 @@ export function usePollingStatus<T>(
         if (!isTerminal(v)) {
           timer = setTimeout(poll, intervalMs)
         }
-      } catch (e: any) {
+      } catch (e) {
         if (!mountedRef.current) return
-        setError(e?.message ?? '오류가 발생했습니다.')
+        setError(e instanceof Error ? e.message : '오류가 발생했습니다.')
       }
     }
 

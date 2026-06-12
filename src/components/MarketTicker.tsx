@@ -97,7 +97,7 @@ export function MarketTicker() {
       onConnect: () => {
         TICKER_STOCKS.forEach(({ code }) => {
           client.subscribe(`/topic/price/${code}`, (msg) => {
-            try { setPrice(JSON.parse(msg.body) as StockPriceData) } catch {}
+            try { setPrice(JSON.parse(msg.body) as StockPriceData) } catch { /* 파싱 실패 무시 */ }
           })
         })
       },
@@ -110,7 +110,7 @@ export function MarketTicker() {
         fetch(`/api/trades/realtime/${code}`, { method: 'DELETE', headers }).catch(() => {})
       })
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const load = async () => {
@@ -122,7 +122,7 @@ export function MarketTicker() {
     load()
     const id = setInterval(load, 30_000)
     return () => clearInterval(id)
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 장 마감 등 STOMP 데이터 없을 때 REST 가격으로 폴백
   useEffect(() => {
@@ -147,8 +147,8 @@ export function MarketTicker() {
   const stockItems = TICKER_STOCKS.map(({ code, name }) => {
     const liveData = stockPrices[code]
     // STOMP 실시간 데이터 없으면 REST 가격으로 폴백 (장 마감 등)
-    const fallbackData = !liveData && restPrices[code]
-      ? { currentPrice: restPrices[code], changeRate: 0, changePrice: 0, stockCode: code } as any
+    const fallbackData: StockPriceData | null = !liveData && restPrices[code]
+      ? { stockCode: code, tradeTime: '', currentPrice: restPrices[code], priceChange: 0, changeRate: 0, volume: 0, direction: 'FLAT' }
       : null
     return <StockItem key={code} name={name} data={liveData ?? fallbackData} />
   })
