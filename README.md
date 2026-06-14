@@ -101,9 +101,8 @@ NAVER_CLIENT_SECRET=...
 
 ## 팀 / 역할
 
-| 영역 | 담당 |
-|---|---|
-| 프론트엔드 전체 (사용자 + 관리자) | 김단비 — 구축 주도 |
-| 백엔드 — assistant · notification · monitoring | 김단비 |
+| 영역                        | 담당 |
+|---------------------------|---|
+| 프론트엔드 전반 (메인 + 사용자 + 관리자) | 김단비 — 구축 주도 |
 
 백엔드 아키텍처(MSA · RAG · LLM-as-a-Judge · AIOps)는 [백엔드 레포지토리](https://github.com/danbeekimm/ants-camp)를 참고해 주세요.
