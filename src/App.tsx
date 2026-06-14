@@ -7,6 +7,7 @@ import { useThemeStore } from '@/store/themeStore'
 // 페이지
 import { LoginPage }              from '@/pages/LoginPage'
 import { AdminLoginPage }         from '@/pages/AdminLoginPage'
+import { GuestLoginPage }         from '@/pages/GuestLoginPage'
 import { DirectLoginPage }        from '@/pages/DirectLoginPage'
 import { RegisterPage }           from '@/pages/RegisterPage'
 import { MainPage }               from '@/pages/MainPage'
@@ -69,7 +70,9 @@ export default function App() {
             {/* 공개 */}
             <Route path="/login"        element={<LoginPage />} />
             <Route path="/admin/login"  element={<AdminLoginPage />} />
-            {/* 전시용 즉석 로그인 (데모 계정 전용) */}
+            {/* 전시용 즉석 로그인 — 고정 데모 계정 자동 로그인 */}
+            <Route path="/guest/login"  element={<GuestLoginPage />} />
+            {/* TODO: 제거 예정 — /guest/login으로 대체됨. URL에 비밀번호가 노출되는 레거시 즉석 로그인 라우트. */}
             <Route path="/admin/login/:email/:pw" element={<DirectLoginPage />} />
             <Route path="/register"     element={<RegisterPage />} />
 

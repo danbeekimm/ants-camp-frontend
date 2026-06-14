@@ -1,27 +1,26 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { login } from '@/services/authApi'
 import { useAuthStore } from '@/store/authStore'
 import { Alert } from '@/components/ui/Alert'
 import { PageSpinner } from '@/components/ui/Spinner'
 
+/** 전시(데모)용 게스트 계정 — 시연 시 누구나 바로 둘러볼 수 있도록 고정된 데모 계정으로 로그인한다. */
+const GUEST_CREDENTIALS = { email: 'admin@antcamp.com', password: 'Admin123!' }
+
 /**
- * 전시(데모)용 즉석 로그인 — /admin/login/:email/:pw
- * URL의 자격증명으로 바로 로그인 후 메인으로 진입한다.
- * 토이 프로젝트 시연 전용: URL에 비밀번호가 노출되므로 데모 계정으로만 사용할 것.
- *
- * TODO: 제거 예정 — 고정 데모 계정 기반의 GuestLoginPage(/guest/login)로 대체됨.
- *       당분간 작동은 유지하되, 정리 시 이 컴포넌트와 라우트를 함께 제거할 것.
+ * 전시(데모)용 즉석 로그인 — /guest/login
+ * 고정된 데모 계정으로 바로 로그인 후 메인으로 진입한다.
+ * 토이 프로젝트 시연 전용.
  */
-export function DirectLoginPage() {
+export function GuestLoginPage() {
   const navigate = useNavigate()
   const setAuth  = useAuthStore((s) => s.setAuth)
-  const { email = '', pw = '' } = useParams()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    login({ email, password: pw })
+    login(GUEST_CREDENTIALS)
       .then(({ user, accessToken, refreshToken }) => {
         if (cancelled) return
         setAuth(user, accessToken, refreshToken)
