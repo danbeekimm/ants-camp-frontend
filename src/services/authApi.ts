@@ -162,7 +162,11 @@ export async function getCompetitions(params?: {
   if (params?.status) q.set('status', params.status)
   if (params?.page   != null) q.set('page', String(params.page))
   if (params?.size   != null) q.set('size', String(params.size))
-  const res = await fetch(`/api/competitions?${q}`)
+  // 게이트웨이가 GET /api/competitions 에 인증을 요구하므로 토큰을 첨부한다.
+  // fetchWithAuth 로 만료 토큰은 401 → 재발급 → 재시도된다.
+  const res = await fetchWithAuth(`/api/competitions?${q}`, {
+    headers: authHeaders(localStorage.getItem('accessToken')),
+  })
   if (!res.ok) {
     const errText = await res.text()
     console.error('[getCompetitions] 오류 응답:', res.status, errText)
@@ -176,7 +180,9 @@ export async function getCompetitions(params?: {
 
 /** GET /api/competitions/{id} */
 export async function getCompetition(id: string): Promise<Competition> {
-  const res = await fetch(`/api/competitions/${id}`)
+  const res = await fetchWithAuth(`/api/competitions/${id}`, {
+    headers: authHeaders(localStorage.getItem('accessToken')),
+  })
   return unwrap<Competition>(res)
 }
 
