@@ -8,7 +8,6 @@ import { TICKER_STOCKS } from '@/config/stocks'
 import { getCompetitions, getMyAccounts, getAsset, getMyRanking } from '@/services/authApi'
 import { toKstDate, isTradingDay, nextKrxOpenAt } from '@/utils/krxHolidays'
 import { formatAccountLabel } from '@/utils/formatAccount'
-import { fetchStockPriceList } from '@/services/stockApi'
 import type { CompetitionRanking } from '@/types/auth'
 import { MarketTicker }   from '@/components/MarketTicker'
 import { HeroSection }    from '@/components/home/HeroSection'
@@ -219,16 +218,14 @@ const RANK_BADGE = [
 
 // ── 🔥 실시간 인기 종목 ──────────────────────────────────────────────────────
 function HotStocksWidget() {
-  const { prices } = useTickerStore()
-  const [restPrices, setRestPrices] = useState<Record<string, number>>({})
+  const { prices, restPrices, fetchRestPrices } = useTickerStore()
   const [flashes,    setFlashes]    = useState<Record<string, 'up' | 'down'>>({})
   const prevRef = useRef<Record<string, number>>({})
 
+  // STOMP 실시간 수신 전 폴백용 현재가 (tickerStore가 MarketTicker와 호출을 dedup)
   useEffect(() => {
-    const missingCodes = TICKER_STOCKS.filter((s) => !prices[s.code]).map((s) => s.code)
-    if (missingCodes.length === 0) return
-    fetchStockPriceList(missingCodes).then(setRestPrices)
-  }, [prices])
+    fetchRestPrices(TICKER_STOCKS.map((s) => s.code))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 가격 변동 감지 → flash 배경
   useEffect(() => {

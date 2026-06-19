@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, cloneElement } from 'react'
 import { Client } from '@stomp/stompjs'
 import { fetchMarketData, MOCK_MARKET, type MarketItem } from '@/services/marketApi'
-import { fetchStockPriceList } from '@/services/stockApi'
 import { useTickerStore } from '@/store/tickerStore'
 import { TICKER_STOCKS } from '@/config/stocks'
 import { Sparkline } from '@/components/ui/Sparkline'
@@ -75,9 +74,8 @@ function StockItem({ name, data }: { name: string; data: StockPriceData | null }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 export function MarketTicker() {
-  const { prices: stockPrices, setPrice, setIndexData: storeSetIndex } = useTickerStore()
+  const { prices: stockPrices, restPrices, setPrice, setIndexData: storeSetIndex, fetchRestPrices } = useTickerStore()
   const [indexData, setIndexData] = useState<MarketItem[]>(MOCK_MARKET)
-  const [restPrices, setRestPrices] = useState<Record<string, number>>({})
   const [paused, setPaused]           = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [secSince, setSecSince]       = useState(0)
@@ -124,11 +122,10 @@ export function MarketTicker() {
     return () => clearInterval(id)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 장 마감 등 STOMP 데이터 없을 때 REST 가격으로 폴백
+  // 장 마감 등 STOMP 데이터 없을 때 REST 가격으로 폴백 (tickerStore가 중복 호출 dedup)
   useEffect(() => {
-    const codes = TICKER_STOCKS.map((s) => s.code)
-    fetchStockPriceList(codes).then(setRestPrices).catch(() => {})
-  }, [])
+    fetchRestPrices(TICKER_STOCKS.map((s) => s.code))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 갱신까지 남은 초 카운트다운
   useEffect(() => {
